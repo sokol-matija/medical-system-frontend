@@ -346,7 +346,14 @@ const Dashboard: React.FC = () => {
                             outerRadius={80}
                             fill={theme.palette.primary.main}
                             dataKey="value"
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent, index }) => {
+                              const color = COLORS[index % COLORS.length];
+                              return (
+                                <text x={0} y={0} fill={color} textAnchor="middle" dominantBaseline="central" fontWeight="bold">
+                                  {`${name}: ${(percent * 100).toFixed(0)}%`}
+                                </text>
+                              );
+                            }}
                           >
                             {[
                               { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
