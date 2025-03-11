@@ -171,7 +171,8 @@ const Dashboard: React.FC = () => {
               background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              mb: 1
+              mb: 1,
+              fontSize: { xs: '1.75rem', sm: '2.125rem' }
             }}>
               Welcome, {user?.username || 'User'}
             </Typography>
@@ -186,9 +187,9 @@ const Dashboard: React.FC = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <Grid container spacing={3}>
+          <Grid container spacing={{ xs: 2, sm: 3 }}>
             {/* Statistics Cards */}
-            <Grid item xs={12} sm={4} md={2.4}>
+            <Grid item xs={6} sm={6} md={2.4}>
               <motion.div variants={itemVariants}>
                 <StatCard
                   title="Patients"
@@ -199,7 +200,7 @@ const Dashboard: React.FC = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={4} md={2.4}>
+            <Grid item xs={6} sm={6} md={2.4}>
               <motion.div variants={itemVariants}>
                 <StatCard
                   title="Doctors"
@@ -210,7 +211,7 @@ const Dashboard: React.FC = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={4} md={2.4}>
+            <Grid item xs={6} sm={6} md={2.4}>
               <motion.div variants={itemVariants}>
                 <StatCard
                   title="Examinations"
@@ -221,7 +222,7 @@ const Dashboard: React.FC = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={4} md={2.4}>
+            <Grid item xs={6} sm={6} md={2.4}>
               <motion.div variants={itemVariants}>
                 <StatCard
                   title="Active Conditions"
@@ -232,7 +233,7 @@ const Dashboard: React.FC = () => {
                 />
               </motion.div>
             </Grid>
-            <Grid item xs={12} sm={4} md={2.4}>
+            <Grid item xs={6} sm={6} md={2.4}>
               <motion.div variants={itemVariants}>
                 <StatCard
                   title="Prescriptions"
@@ -247,21 +248,21 @@ const Dashboard: React.FC = () => {
             {/* Charts */}
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Paper sx={{ p: 2, height: '100%', boxShadow: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom>
+                <Paper sx={{ p: { xs: 1, sm: 2 }, height: '100%', boxShadow: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                     Examinations by Type
                   </Typography>
                   {examinationsByType.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart
                         data={examinationsByType}
-                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip />
-                        <Legend />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
                         <Bar dataKey="count" fill={theme.palette.primary.main} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -278,8 +279,8 @@ const Dashboard: React.FC = () => {
             
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', boxShadow: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom>
+                <Paper sx={{ p: { xs: 1, sm: 2 }, height: '100%', display: 'flex', flexDirection: 'column', boxShadow: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                     Patient Gender Distribution
                   </Typography>
                   {patients && patients.length > 0 ? (
@@ -505,21 +506,28 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, onClick 
       }} 
       onClick={onClick}
     >
-      <CardContent sx={{ position: 'relative' }}>
+      <CardContent sx={{ position: 'relative', p: { xs: 1.5, sm: 2 } }}>
         <Box sx={{ 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
-          mb: 2
+          mb: 1
         }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              fontWeight: 'bold',
+              fontSize: { xs: '0.9rem', sm: '1rem', md: '1.25rem' }
+            }}
+          >
             {title}
           </Typography>
           {icon && (
             <Box sx={{ 
               color: 'white', 
               bgcolor: color, 
-              p: 1, 
+              p: { xs: 0.5, sm: 1 }, 
               borderRadius: '50%',
               display: 'flex',
               justifyContent: 'center',
@@ -529,7 +537,15 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, onClick 
             </Box>
           )}
         </Box>
-        <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color }}>
+        <Typography 
+          variant="h4" 
+          component="div" 
+          sx={{ 
+            fontWeight: 'bold', 
+            color,
+            fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' }
+          }}
+        >
           {value}
         </Typography>
       </CardContent>

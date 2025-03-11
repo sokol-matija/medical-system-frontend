@@ -30,19 +30,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         component="main" 
         sx={{ 
           flexGrow: 1, 
-          py: 3,
-          px: { xs: 2, sm: 3, md: 4 },
+          py: { xs: 2, sm: 3 },
+          px: { xs: 1, sm: 2, md: 3, lg: 4 },
           width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box',
           display: 'flex',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          overflowX: 'hidden'
         }}
       >
         <Box sx={{ 
           width: '100%', 
           maxWidth: '1400px',
-          mx: 'auto'
+          mx: 'auto',
+          px: { xs: 1, sm: 2 }
         }}>
           {children}
         </Box>
