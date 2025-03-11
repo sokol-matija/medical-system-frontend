@@ -250,9 +250,9 @@ const Dashboard: React.FC = () => {
                 <Paper sx={{ 
                   p: { xs: 1, sm: 2 }, 
                   height: '100%', 
-                  boxShadow: 3, 
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)', 
                   borderRadius: 2,
-                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                  bgcolor: 'rgba(26, 32, 44, 0.98)'
                 }}>
                   <Typography variant="h6" gutterBottom sx={{ 
                     fontSize: { xs: '1rem', sm: '1.25rem' },
@@ -288,7 +288,14 @@ const Dashboard: React.FC = () => {
                             labelStyle={{ color: '#E2E8F0', fontWeight: 'bold' }}
                           />
                           <Legend 
-                            wrapperStyle={{ fontSize: 12, color: '#E2E8F0' }}
+                            wrapperStyle={{ 
+                              fontSize: 12, 
+                              color: '#E2E8F0',
+                              paddingTop: 20,
+                              width: '90%',
+                              marginLeft: 'auto',
+                              marginRight: 'auto'
+                            }}
                             formatter={(value) => <span style={{ color: '#E2E8F0' }}>{value}</span>}
                           />
                           <Bar dataKey="count" fill={theme.palette.primary.main} />
@@ -313,9 +320,9 @@ const Dashboard: React.FC = () => {
                   height: '100%', 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  boxShadow: 3, 
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)', 
                   borderRadius: 2,
-                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                  bgcolor: 'rgba(26, 32, 44, 0.98)'
                 }}>
                   <Typography variant="h6" gutterBottom sx={{ 
                     fontSize: { xs: '1rem', sm: '1.25rem' },
@@ -336,7 +343,7 @@ const Dashboard: React.FC = () => {
                             cx="50%"
                             cy="50%"
                             labelLine={true}
-                            outerRadius={({ viewBox }) => Math.min(viewBox.width, viewBox.height) / 3}
+                            outerRadius={80}
                             fill={theme.palette.primary.main}
                             dataKey="value"
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
@@ -357,7 +364,8 @@ const Dashboard: React.FC = () => {
                             labelStyle={{ color: '#E2E8F0', fontWeight: 'bold' }}
                           />
                           <Legend 
-                            formatter={(value) => <span style={{ color: '#E2E8F0' }}>{value}</span>}
+                            formatter={(value) => <span style={{ color: '#FFBB28', fontWeight: 'bold' }}>{value}</span>}
+                            wrapperStyle={{ paddingTop: 20 }}
                           />
                         </PieChart>
                       </ResponsiveContainer>
@@ -378,9 +386,9 @@ const Dashboard: React.FC = () => {
               <motion.div variants={itemVariants}>
                 <Paper sx={{ 
                   p: 2, 
-                  boxShadow: 3, 
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)', 
                   borderRadius: 2,
-                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                  bgcolor: 'rgba(26, 32, 44, 0.98)'
                 }}>
                   <Typography variant="h6" gutterBottom sx={{ 
                     color: '#E2E8F0',
@@ -461,9 +469,9 @@ const Dashboard: React.FC = () => {
               <motion.div variants={itemVariants}>
                 <Paper sx={{ 
                   p: 2, 
-                  boxShadow: 3, 
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)', 
                   borderRadius: 2,
-                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                  bgcolor: 'rgba(26, 32, 44, 0.98)'
                 }}>
                   <Typography variant="h6" gutterBottom sx={{ 
                     color: '#E2E8F0',
@@ -564,13 +572,14 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, onClick 
   return (
     <Card 
       sx={{ 
-        boxShadow: 3,
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
         borderRadius: 2, 
         height: '100%',
         transition: 'all 0.3s',
+        bgcolor: 'rgba(26, 32, 44, 0.98)',
         '&:hover': {
           transform: 'translateY(-5px)',
-          boxShadow: 6,
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3)',
           cursor: onClick ? 'pointer' : 'default'
         }
       }} 
