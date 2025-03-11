@@ -431,7 +431,7 @@ const Dashboard: React.FC = () => {
                             align="center"
                             iconType="circle"
                             iconSize={15}
-                            formatter={(value, entry, index) => (
+                            formatter={(value, _entry, index) => (
                               <span style={{ 
                                 color: GENDER_COLORS[index % GENDER_COLORS.length], 
                                 fontWeight: 'bold',
