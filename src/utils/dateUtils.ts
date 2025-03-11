@@ -59,4 +59,18 @@ export const calculateAge = (dateOfBirthString: string): number => {
     console.error('Error calculating age:', error);
     return 0;
   }
+};
+
+/**
+ * Calculates the age based on a date of birth (Date object)
+ * @param dateOfBirth - The Date object representing birth date
+ * @returns Age in years
+ */
+export const getAge = (dateOfBirth: Date): number => {
+  try {
+    return differenceInYears(new Date(), dateOfBirth);
+  } catch (error) {
+    console.error('Error calculating age:', error);
+    return 0;
+  }
 }; 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { 
   Grid, 
   Card, 
@@ -11,7 +11,12 @@ import {
   ListItemText,
   ListItemButton,
   Button,
-  useTheme
+  useTheme,
+  Slider,
+  Chip,
+  Stack,
+  IconButton,
+  Tooltip as MuiTooltip
 } from '@mui/material';
 import { 
   BarChart, 
@@ -24,9 +29,12 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  AreaChart,
+  Area,
+  ReferenceLine
 } from 'recharts';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/layout/PageContainer/PageContainer';
 import { useAuth } from '../../hooks/useAuth';
 import { useApi } from '../../hooks/useApi';
@@ -37,12 +45,15 @@ import { getMedicalHistories } from '../../api/medicalHistoryApi';
 import { getPrescriptions } from '../../api/prescriptionApi';
 import { Patient, Examination, MedicalHistory, Prescription, Doctor } from '../../types';
 import { useNavigate } from 'react-router-dom';
-import { formatDate } from '../../utils/dateUtils';
+import { formatDate, getAge } from '../../utils/dateUtils';
 import PersonIcon from '@mui/icons-material/Person';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import MedicationIcon from '@mui/icons-material/Medication';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { getExaminationTypeDescription } from '../../utils/examinationUtils';
 
 /**
@@ -64,6 +75,12 @@ const Dashboard: React.FC = () => {
   const [examinationsByType, setExaminationsByType] = useState<{ name: string; count: number }[]>([]);
   const [recentExaminations, setRecentExaminations] = useState<Examination[]>([]);
   const [recentPrescriptions, setRecentPrescriptions] = useState<Prescription[]>([]);
+  
+  // New state for patient age distribution
+  const [patientAgeDistribution, setPatientAgeDistribution] = useState<{ age: number; count: number }[]>([]);
+  const [ageStats, setAgeStats] = useState({ mean: 0, median: 0, mode: 0, range: [0, 100] });
+  const [selectedAgeRange, setSelectedAgeRange] = useState<[number, number]>([0, 100]);
+  const [chartAnimation, setChartAnimation] = useState(false);
   
   // API hooks for fetching data
   const { data: patients, loading: loadingPatients, execute: fetchPatients } = useApi<Patient[], []>(getPatients);
@@ -97,10 +114,68 @@ const Dashboard: React.FC = () => {
       });
       
       // Convert to array for chart
-      const examinationStats = Array.from(countByType.entries()).map(([name, count]) => ({
-        name,
-        count
-      }));
+      const examinationStats = Array.from(countByType.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count); // Sort by count descending
+      
+      // Calculate patient age distribution
+      if (patients.length > 0) {
+        // Get ages from birth dates
+        const ages = patients.map(patient => {
+          return getAge(new Date(patient.dateOfBirth));
+        });
+        
+        // Count patients by age
+        const ageCount = new Map<number, number>();
+        ages.forEach(age => {
+          const count = ageCount.get(age) || 0;
+          ageCount.set(age, count + 1);
+        });
+        
+        // Fill in missing ages for smoother distribution
+        const minAge = Math.min(...ages);
+        const maxAge = Math.max(...ages);
+        
+        const ageDistribution: { age: number; count: number }[] = [];
+        for (let age = minAge; age <= maxAge; age++) {
+          ageDistribution.push({
+            age,
+            count: ageCount.get(age) || 0
+          });
+        }
+        
+        // Calculate age statistics
+        const mean = Math.round(ages.reduce((sum, age) => sum + age, 0) / ages.length);
+        
+        // Median
+        const sortedAges = [...ages].sort((a, b) => a - b);
+        const middle = Math.floor(sortedAges.length / 2);
+        const median = sortedAges.length % 2 === 0
+          ? Math.round((sortedAges[middle - 1] + sortedAges[middle]) / 2)
+          : sortedAges[middle];
+        
+        // Mode (most common age)
+        let maxCount = 0;
+        let mode = 0;
+        ageCount.forEach((count, age) => {
+          if (count > maxCount) {
+            maxCount = count;
+            mode = age;
+          }
+        });
+        
+        setPatientAgeDistribution(ageDistribution);
+        setAgeStats({ 
+          mean, 
+          median, 
+          mode, 
+          range: [minAge, maxAge] 
+        });
+        setSelectedAgeRange([minAge, maxAge]);
+        
+        // Start animation
+        setChartAnimation(true);
+      }
       
       // Get recent examinations (last 5)
       const sortedExaminations = [...examinations].sort((a, b) => 
@@ -127,29 +202,32 @@ const Dashboard: React.FC = () => {
     }
   }, [patients, doctors, examinations, medicalHistories, prescriptions]);
 
-  // Colors for charts - used for bar chart
-  const BAR_COLORS = ['#3B82F6', '#4F46E5', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  // Filter dashboard data based on age range selection
+  const handleAgeRangeChange = (_event: Event, newValue: number | number[]) => {
+    setSelectedAgeRange(newValue as [number, number]);
+  };
   
-  // Gender chart colors - bright, high contrast colors
+  // Colors for charts
+  const BAR_COLORS = ['#3B82F6', '#4F46E5', '#00C6FF', '#60A5FA', '#8884d8', '#82ca9d'];
   const GENDER_COLORS = ['#00C6FF', '#FF5E93'];
+  const AREA_GRADIENT_COLORS = ['#14B8A6', '#0D9488', '#0F766E'];
   
   // Check if all data is loading
   const isLoading = loadingPatients || loadingDoctors || loadingExaminations || 
     loadingMedicalHistories || loadingPrescriptions;
 
-  // Container animation variants
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
       opacity: 1,
       transition: { 
         when: "beforeChildren",
-        staggerChildren: 0.2
+        staggerChildren: 0.1
       }
     }
   };
 
-  // Item animation variants
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { 
@@ -158,6 +236,21 @@ const Dashboard: React.FC = () => {
       transition: { type: "spring", stiffness: 100 }
     }
   };
+  
+  // Memoize filtered examination data based on age range
+  const filteredPatients = useMemo(() => {
+    if (!patients) return [];
+    return patients.filter(patient => {
+      const age = getAge(new Date(patient.dateOfBirth));
+      return age >= selectedAgeRange[0] && age <= selectedAgeRange[1];
+    });
+  }, [patients, selectedAgeRange]);
+  
+  // Reset the age distribution chart animation
+  const resetChartAnimation = useCallback(() => {
+    setChartAnimation(false);
+    setTimeout(() => setChartAnimation(true), 100);
+  }, []);
 
   return (
     <PageContainer title="Dashboard">
@@ -247,48 +340,352 @@ const Dashboard: React.FC = () => {
               </motion.div>
             </Grid>
             
-            {/* Charts */}
+            {/* Patient Age Distribution Chart - NEW */}
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
                 <Paper sx={{ 
-                  p: { xs: 1, sm: 2 }, 
+                  p: { xs: 1.5, sm: 2.5 }, 
                   height: '100%', 
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)', 
-                  borderRadius: 2,
-                  bgcolor: 'rgba(26, 32, 44, 0.98)'
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4)', 
+                  borderRadius: 3,
+                  bgcolor: 'rgba(17, 24, 39, 0.98)',
+                  border: '1px solid rgba(99, 102, 241, 0.1)',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  '&:hover': {
+                    boxShadow: '0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
+                    transition: 'all 0.3s ease-in-out'
+                  }
                 }}>
-                  <Typography variant="h6" gutterBottom sx={{ 
-                    fontSize: { xs: '1rem', sm: '1.25rem' },
-                    color: '#E2E8F0',
-                    fontWeight: 'bold'
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    mb: 2
                   }}>
-                    Examinations by Type
-                  </Typography>
+                    <Typography variant="h6" sx={{ 
+                      fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                      color: '#E2E8F0',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      <TimelineIcon sx={{ color: AREA_GRADIENT_COLORS[0] }} />
+                      Patient Age Distribution
+                    </Typography>
+                    <IconButton 
+                      size="small" 
+                      onClick={resetChartAnimation}
+                      sx={{ color: AREA_GRADIENT_COLORS[0] }}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </Box>
+                  
+                  {patientAgeDistribution.length > 0 ? (
+                    <>
+                      <Box sx={{ width: '100%', height: 280, position: 'relative' }}>
+                        <AnimatePresence>
+                          {chartAnimation && (
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: '100%' }}
+                              transition={{ duration: 1.5, ease: "easeInOut" }}
+                              style={{ 
+                                position: 'absolute', 
+                                top: 0, 
+                                left: 0, 
+                                height: '100%', 
+                                pointerEvents: 'none',
+                                overflow: 'hidden',
+                                zIndex: 5
+                              }}
+                            >
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart
+                                  data={patientAgeDistribution}
+                                  margin={{ top: 15, right: 0, left: 0, bottom: 0 }}
+                                >
+                                  <defs>
+                                    <linearGradient id="ageGradient" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor={AREA_GRADIENT_COLORS[0]} stopOpacity={0.8} />
+                                      <stop offset="50%" stopColor={AREA_GRADIENT_COLORS[1]} stopOpacity={0.5} />
+                                      <stop offset="100%" stopColor={AREA_GRADIENT_COLORS[2]} stopOpacity={0.2} />
+                                    </linearGradient>
+                                  </defs>
+                                  <XAxis 
+                                    dataKey="age" 
+                                    tick={{ fontSize: 12, fill: '#E2E8F0' }}
+                                    stroke="#718096"
+                                    strokeWidth={0.5}
+                                  />
+                                  <YAxis 
+                                    tick={{ fontSize: 12, fill: '#E2E8F0' }}
+                                    stroke="#718096"
+                                    strokeWidth={0.5}
+                                  />
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                                  <Tooltip 
+                                    contentStyle={{ 
+                                      backgroundColor: '#1F2937', 
+                                      border: `1px solid ${AREA_GRADIENT_COLORS[0]}`,
+                                      color: '#E2E8F0',
+                                      borderRadius: '4px',
+                                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+                                    }}
+                                    formatter={(value) => [`${value} patients`, 'Count']}
+                                    labelFormatter={(value) => `Age: ${value} years`}
+                                  />
+                                  <ReferenceLine 
+                                    x={ageStats.median} 
+                                    stroke="#FCD34D"
+                                    strokeWidth={2}
+                                    strokeDasharray="3 3"
+                                    label={{
+                                      value: `Median: ${ageStats.median}`,
+                                      position: 'insideBottomRight',
+                                      fill: '#FCD34D',
+                                      fontSize: 12,
+                                      fontWeight: 'bold'
+                                    }}
+                                  />
+                                  <ReferenceLine 
+                                    x={ageStats.mean} 
+                                    stroke="#F472B6"
+                                    strokeWidth={2}
+                                    strokeDasharray="3 3"
+                                    label={{
+                                      value: `Mean: ${ageStats.mean}`,
+                                      position: 'insideTop',
+                                      fill: '#F472B6',
+                                      fontSize: 12,
+                                      fontWeight: 'bold'
+                                    }}
+                                  />
+                                  <Area 
+                                    type="monotone" 
+                                    dataKey="count" 
+                                    stroke={AREA_GRADIENT_COLORS[0]} 
+                                    strokeWidth={3}
+                                    fill="url(#ageGradient)"
+                                    animationDuration={1500}
+                                    activeDot={{ 
+                                      r: 6,
+                                      stroke: '#FFFFFF',
+                                      strokeWidth: 1,
+                                      fill: AREA_GRADIENT_COLORS[0]
+                                    }}
+                                  />
+                                </AreaChart>
+                              </ResponsiveContainer>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </Box>
+                      
+                      <Box sx={{ px: 2, mt: 2 }}>
+                        <Stack 
+                          direction="row" 
+                          spacing={1.5} 
+                          sx={{ 
+                            justifyContent: 'center', 
+                            mb: 2,
+                            flexWrap: 'wrap',
+                            '& .MuiChip-root': {
+                              fontWeight: 'bold',
+                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                            }
+                          }}
+                        >
+                          <Chip 
+                            label={`Median: ${ageStats.median} years`} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: 'rgba(252, 211, 77, 0.2)', 
+                              color: '#FCD34D',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(252, 211, 77, 0.3)'
+                            }} 
+                          />
+                          <Chip 
+                            label={`Mean: ${ageStats.mean} years`} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: 'rgba(244, 114, 182, 0.2)', 
+                              color: '#F472B6',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(244, 114, 182, 0.3)'
+                            }} 
+                          />
+                          <Chip 
+                            label={`Mode: ${ageStats.mode} years`} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: 'rgba(20, 184, 166, 0.2)', 
+                              color: AREA_GRADIENT_COLORS[0],
+                              borderRadius: '4px',
+                              border: `1px solid rgba(20, 184, 166, 0.3)`
+                            }} 
+                          />
+                          <Chip 
+                            label={`Selected: ${filteredPatients.length} patients`} 
+                            size="small" 
+                            sx={{ 
+                              bgcolor: 'rgba(96, 165, 250, 0.2)', 
+                              color: '#60A5FA',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(96, 165, 250, 0.3)'
+                            }} 
+                          />
+                        </Stack>
+                        
+                        <Box sx={{ px: 2 }}>
+                          <Stack direction="row" spacing={2} alignItems="center">
+                            <Typography variant="body2" sx={{ color: '#E2E8F0', minWidth: 30 }}>
+                              {selectedAgeRange[0]}
+                            </Typography>
+                            <Slider
+                              value={selectedAgeRange}
+                              onChange={handleAgeRangeChange}
+                              valueLabelDisplay="auto"
+                              min={ageStats.range[0]}
+                              max={ageStats.range[1]}
+                              sx={{
+                                color: AREA_GRADIENT_COLORS[0],
+                                '& .MuiSlider-thumb': {
+                                  borderRadius: '50%',
+                                  width: 16,
+                                  height: 16,
+                                  backgroundColor: '#fff',
+                                  border: `2px solid ${AREA_GRADIENT_COLORS[0]}`,
+                                  boxShadow: '0 0 0 5px rgba(20, 184, 166, 0.1)',
+                                  '&:hover': {
+                                    boxShadow: '0 0 0 8px rgba(20, 184, 166, 0.2)',
+                                  }
+                                },
+                                '& .MuiSlider-valueLabel': {
+                                  backgroundColor: AREA_GRADIENT_COLORS[0],
+                                  borderRadius: '4px',
+                                  padding: '2px 6px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold'
+                                }
+                              }}
+                              disableSwap
+                            />
+                            <Typography variant="body2" sx={{ color: '#E2E8F0', minWidth: 30 }}>
+                              {selectedAgeRange[1]}
+                            </Typography>
+                          </Stack>
+                        </Box>
+                      </Box>
+                    </>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                      <Typography variant="body1" sx={{ color: '#E2E8F0' }}>
+                        No patient age data available
+                      </Typography>
+                    </Box>
+                  )}
+                </Paper>
+              </motion.div>
+            </Grid>
+            
+            {/* Examinations by Type Chart - IMPROVED */}
+            <Grid item xs={12} md={6}>
+              <motion.div variants={itemVariants}>
+                <Paper sx={{ 
+                  p: { xs: 1.5, sm: 2.5 }, 
+                  height: '100%', 
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4)', 
+                  borderRadius: 3,
+                  bgcolor: 'rgba(17, 24, 39, 0.98)',
+                  border: '1px solid rgba(99, 102, 241, 0.1)',
+                  overflow: 'hidden',
+                  '&:hover': {
+                    boxShadow: '0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
+                    transition: 'all 0.3s ease-in-out'
+                  }
+                }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    mb: 2 
+                  }}>
+                    <Typography variant="h6" sx={{ 
+                      fontSize: { xs: '1.1rem', sm: '1.3rem' },
+                      color: '#E2E8F0',
+                      fontWeight: 'bold',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}>
+                      <MonitorHeartIcon sx={{ color: BAR_COLORS[0] }} />
+                      Examinations by Type
+                    </Typography>
+                    <MuiTooltip title="Shows distribution of examination types across the system">
+                      <InfoOutlinedIcon sx={{ color: '#A0AEC0', fontSize: '1.1rem' }} />
+                    </MuiTooltip>
+                  </Box>
                   {examinationsByType.length > 0 ? (
-                    <Box sx={{ width: '100%', height: 300, overflowX: 'auto' }}>
+                    <Box sx={{ width: '100%', height: 380, overflowX: 'auto' }}>
                       <ResponsiveContainer width="100%" height="100%" minWidth={350}>
                         <BarChart
                           data={examinationsByType}
-                          margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
+                          margin={{ top: 20, right: 30, left: 10, bottom: 60 }}
+                          barGap={4}
+                          barCategoryGap="20%"
+                          style={{ fontFamily: theme.typography.fontFamily }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                          <defs>
+                            {BAR_COLORS.map((color, index) => (
+                              <linearGradient
+                                key={`gradient-${index}`}
+                                id={`barGradient${index}`}
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+                                <stop offset="100%" stopColor={color} stopOpacity={0.6} />
+                              </linearGradient>
+                            ))}
+                            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.3" />
+                            </filter>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" vertical={false} />
                           <XAxis 
                             dataKey="name" 
                             tick={{ fontSize: 12, fill: '#E2E8F0' }}
                             angle={-45}
                             textAnchor="end"
-                            height={60}
+                            height={80}
+                            stroke="#718096"
+                            strokeWidth={0.5}
+                            tickMargin={10}
                           />
                           <YAxis 
                             tick={{ fontSize: 12, fill: '#E2E8F0' }}
+                            stroke="#718096"
+                            strokeWidth={0.5}
+                            tickMargin={8}
                           />
                           <Tooltip 
                             contentStyle={{ 
                               backgroundColor: '#1F2937', 
                               border: '1px solid #3B82F6',
-                              color: '#E2E8F0'
+                              color: '#E2E8F0',
+                              fontWeight: 'bold',
+                              borderRadius: '4px',
+                              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
                             }}
-                            labelStyle={{ color: '#E2E8F0', fontWeight: 'bold' }}
+                            labelStyle={{ color: '#E2E8F0', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '4px', marginBottom: '4px' }}
+                            formatter={(value) => [`${value} examinations`, 'Count']}
+                            cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
                           />
                           <Legend 
                             wrapperStyle={{ 
@@ -299,9 +696,25 @@ const Dashboard: React.FC = () => {
                               marginLeft: 'auto',
                               marginRight: 'auto'
                             }}
-                            formatter={(value) => <span style={{ color: '#E2E8F0' }}>{value}</span>}
+                            formatter={() => 'Examination Count'}
+                            iconType="circle"
                           />
-                          <Bar dataKey="count" fill={BAR_COLORS[0]} />
+                          <Bar 
+                            dataKey="count" 
+                            name="Examination Count"
+                            radius={[4, 4, 0, 0]}
+                            background={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                            animationDuration={1500}
+                            animationEasing="ease-out"
+                          >
+                            {examinationsByType.map((_entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={`url(#barGradient${index % BAR_COLORS.length})`}
+                                filter="url(#shadow)"
+                              />
+                            ))}
+                          </Bar>
                         </BarChart>
                       </ResponsiveContainer>
                     </Box>
@@ -316,13 +729,12 @@ const Dashboard: React.FC = () => {
               </motion.div>
             </Grid>
             
+            {/* Continue with the rest of the dashboard components... */}
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
                 <Paper sx={{ 
                   p: { xs: 1, sm: 2 }, 
                   height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
                   boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3)', 
                   borderRadius: 2,
                   bgcolor: 'rgba(26, 32, 44, 0.98)'
