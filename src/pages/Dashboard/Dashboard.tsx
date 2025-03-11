@@ -127,8 +127,11 @@ const Dashboard: React.FC = () => {
     }
   }, [patients, doctors, examinations, medicalHistories, prescriptions]);
 
-  // Colors for charts
-  const COLORS = ['#3B82F6', '#4F46E5', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  // Colors for charts - used for bar chart
+  const BAR_COLORS = ['#3B82F6', '#4F46E5', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  
+  // Gender chart colors - bright, high contrast colors
+  const GENDER_COLORS = ['#00C6FF', '#FF5E93'];
   
   // Check if all data is loading
   const isLoading = loadingPatients || loadingDoctors || loadingExaminations || 
@@ -298,7 +301,7 @@ const Dashboard: React.FC = () => {
                             }}
                             formatter={(value) => <span style={{ color: '#E2E8F0' }}>{value}</span>}
                           />
-                          <Bar dataKey="count" fill={theme.palette.primary.main} />
+                          <Bar dataKey="count" fill={BAR_COLORS[0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </Box>
@@ -335,6 +338,11 @@ const Dashboard: React.FC = () => {
                     <Box sx={{ width: '100%', height: 300, display: 'flex', justifyContent: 'center' }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
+                          <defs>
+                            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
+                            </filter>
+                          </defs>
                           <Pie
                             data={[
                               { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
@@ -342,37 +350,101 @@ const Dashboard: React.FC = () => {
                             ]}
                             cx="50%"
                             cy="50%"
-                            labelLine={true}
-                            outerRadius={80}
-                            fill={theme.palette.primary.main}
+                            labelLine={false}
+                            outerRadius={90}
+                            innerRadius={40}
+                            paddingAngle={5}
+                            fill="#8884d8"
                             dataKey="value"
-                            label={({ name, percent, index }) => {
-                              const color = COLORS[index % COLORS.length];
+                            filter="url(#shadow)"
+                            label={({ name, percent, cx, cy, midAngle, innerRadius, outerRadius, index }) => {
+                              const RADIAN = Math.PI / 180;
+                              const radius = 25 + innerRadius + (outerRadius - innerRadius) * 0.5;
+                              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                              
                               return (
-                                <text x={0} y={0} fill={color} textAnchor="middle" dominantBaseline="central" fontWeight="bold">
-                                  {`${name}: ${(percent * 100).toFixed(0)}%`}
-                                </text>
+                                <g>
+                                  <text 
+                                    x={x} 
+                                    y={y} 
+                                    fill={GENDER_COLORS[index % GENDER_COLORS.length]} 
+                                    textAnchor={x > cx ? 'start' : 'end'} 
+                                    dominantBaseline="central"
+                                    fontWeight="bold"
+                                    fontSize="14"
+                                    filter="url(#shadow)"
+                                  >
+                                    {`${name}`}
+                                  </text>
+                                  <text 
+                                    x={x} 
+                                    y={y + 20} 
+                                    fill="#FFFFFF" 
+                                    textAnchor={x > cx ? 'start' : 'end'} 
+                                    dominantBaseline="central"
+                                    fontWeight="bold"
+                                    fontSize="14"
+                                  >
+                                    {`${(percent * 100).toFixed(0)}%`}
+                                  </text>
+                                </g>
                               );
                             }}
                           >
                             {[
                               { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
                               { name: 'Female', value: patients.filter(p => p.gender === 'F').length }
-                            ].map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ].map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={GENDER_COLORS[index % GENDER_COLORS.length]} 
+                                stroke="#1A202C"
+                                strokeWidth={2}
+                              />
                             ))}
                           </Pie>
                           <Tooltip 
                             contentStyle={{ 
                               backgroundColor: '#1F2937', 
                               border: '1px solid #3B82F6',
-                              color: '#E2E8F0'
+                              color: '#E2E8F0',
+                              fontWeight: 'bold',
+                              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
                             }}
-                            labelStyle={{ color: '#E2E8F0', fontWeight: 'bold' }}
+                            itemStyle={{ color: '#FFFFFF' }}
+                            formatter={(value, name, props) => {
+                              const index = props.dataKey === 'value' ? props.payload.index : 0;
+                              return [
+                                <span style={{ color: GENDER_COLORS[index % GENDER_COLORS.length], fontWeight: 'bold' }}>
+                                  {value} patients
+                                </span>,
+                                <span style={{ color: GENDER_COLORS[index % GENDER_COLORS.length], fontWeight: 'bold' }}>
+                                  {name}
+                                </span>
+                              ];
+                            }}
                           />
                           <Legend 
-                            formatter={(value) => <span style={{ color: '#FFBB28', fontWeight: 'bold' }}>{value}</span>}
-                            wrapperStyle={{ paddingTop: 20 }}
+                            layout="horizontal"
+                            verticalAlign="bottom"
+                            align="center"
+                            iconType="circle"
+                            iconSize={15}
+                            formatter={(value, entry, index) => (
+                              <span style={{ 
+                                color: GENDER_COLORS[index % GENDER_COLORS.length], 
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                textShadow: '0px 0px 2px rgba(0, 0, 0, 0.5)'
+                              }}>
+                                {value}
+                              </span>
+                            )}
+                            wrapperStyle={{ 
+                              paddingTop: 20,
+                              bottom: 0
+                            }}
                           />
                         </PieChart>
                       </ResponsiveContainer>
