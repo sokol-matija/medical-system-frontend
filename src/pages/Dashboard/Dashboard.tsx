@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
   const [recentExaminations, setRecentExaminations] = useState<Examination[]>([]);
   const [recentPrescriptions, setRecentPrescriptions] = useState<Prescription[]>([]);
   
-  // New state for patient age distribution
+  // State for patient age distribution
   const [patientAgeDistribution, setPatientAgeDistribution] = useState<{ age: number; count: number }[]>([]);
   const [ageStats, setAgeStats] = useState({ mean: 0, median: 0, mode: 0, range: [0, 100] });
   const [selectedAgeRange, setSelectedAgeRange] = useState<[number, number]>([0, 100]);
@@ -176,12 +176,12 @@ const Dashboard: React.FC = () => {
         setChartAnimation(true);
       }
       
-      // Get recent examinations (last 10 instead of 5)
+      // Get recent examinations (last 10)
       const sortedExaminations = [...examinations].sort((a, b) => 
         new Date(b.examinationDateTime).getTime() - new Date(a.examinationDateTime).getTime()
       );
       
-      // Get recent prescriptions (last 10 instead of 5)
+      // Get recent prescriptions (last 10)
       const sortedPrescriptions = [...prescriptions].sort((a, b) => 
         new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime()
       );
@@ -196,8 +196,8 @@ const Dashboard: React.FC = () => {
       });
       
       setExaminationsByType(examinationStats);
-      setRecentExaminations(sortedExaminations.slice(0, 10)); // Show 10 items
-      setRecentPrescriptions(sortedPrescriptions.slice(0, 10)); // Show 10 items
+      setRecentExaminations(sortedExaminations.slice(0, 10));
+      setRecentPrescriptions(sortedPrescriptions.slice(0, 10));
     }
   }, [patients, doctors, examinations, medicalHistories, prescriptions]);
 
@@ -1180,4 +1180,4 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, onClick 
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
