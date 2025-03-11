@@ -3,6 +3,7 @@
 # Build script for Medical System Frontend
 
 echo "Building Medical System Frontend for production..."
+echo "Using API URL: ${VITE_API_URL:-https://medicalsystemapi.azurewebsites.net}"
 
 # Install dependencies
 echo "Installing dependencies..."

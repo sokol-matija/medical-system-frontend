@@ -30,8 +30,11 @@ api.interceptors.request.use(
       });
     }
     
-    // Add a check to ensure the URL starts with /api
-    if (config.url && !config.url.startsWith('/api')) {
+    // Check if the baseURL already contains /api
+    const baseUrlHasApi = config.baseURL?.includes('/api');
+    
+    // Only add /api prefix if the URL doesn't already start with /api and the baseURL doesn't contain /api
+    if (config.url && !config.url.startsWith('/api') && !baseUrlHasApi) {
       config.url = `/api${config.url}`;
     }
     

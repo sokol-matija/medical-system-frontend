@@ -61,14 +61,14 @@ This project is configured for easy deployment to Vercel. Follow these steps to 
 2. Log in to [Vercel](https://vercel.com) and create a new project
 3. Import your GitHub repository
 4. Configure the following environment variables:
-   - `VITE_API_URL`: The URL of your backend API (e.g., `https://your-api-domain.com`)
+   - `VITE_API_URL`: The URL of your backend API (default: `https://medicalsystemapi.azurewebsites.net`)
 5. Click "Deploy"
 
 ### Environment Variables
 
 The application uses the following environment variables:
 
-- `VITE_API_URL`: The base URL for the backend API
+- `VITE_API_URL`: The base URL for the backend API (default: `https://medicalsystemapi.azurewebsites.net`)
 
 You can set these in the Vercel dashboard under Project Settings > Environment Variables.
 
