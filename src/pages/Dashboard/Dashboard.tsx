@@ -342,7 +342,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {!isLoading && (
-          <Box sx={{ height: 'calc(100vh - 220px)', overflow: 'auto', pr: { xs: 0, md: 1 } }}>
+          <Box sx={{ pr: { xs: 0, md: 1 } }}>
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               {/* Row 1: Patient Age Distribution (full width) */}
               <Grid item xs={12}>
