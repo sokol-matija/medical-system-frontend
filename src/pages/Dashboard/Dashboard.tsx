@@ -10,7 +10,6 @@ import {
   List,
   ListItemText,
   ListItemButton,
-  Divider,
   Button,
   useTheme
 } from '@mui/material';
@@ -129,7 +128,7 @@ const Dashboard: React.FC = () => {
   }, [patients, doctors, examinations, medicalHistories, prescriptions]);
 
   // Colors for charts
-  const COLORS = [theme.palette.primary.main, theme.palette.secondary.main, '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+  const COLORS = ['#3B82F6', '#4F46E5', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
   
   // Check if all data is loading
   const isLoading = loadingPatients || loadingDoctors || loadingExaminations || 
@@ -176,7 +175,7 @@ const Dashboard: React.FC = () => {
             }}>
               Welcome, {user?.username || 'User'}
             </Typography>
-            <Typography variant="body1" color="textSecondary">
+            <Typography variant="body1" sx={{ color: '#E2E8F0' }}>
               Medical System Dashboard - Your daily overview
             </Typography>
           </Box>
@@ -248,27 +247,57 @@ const Dashboard: React.FC = () => {
             {/* Charts */}
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Paper sx={{ p: { xs: 1, sm: 2 }, height: '100%', boxShadow: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                <Paper sx={{ 
+                  p: { xs: 1, sm: 2 }, 
+                  height: '100%', 
+                  boxShadow: 3, 
+                  borderRadius: 2,
+                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                }}>
+                  <Typography variant="h6" gutterBottom sx={{ 
+                    fontSize: { xs: '1rem', sm: '1.25rem' },
+                    color: '#E2E8F0',
+                    fontWeight: 'bold'
+                  }}>
                     Examinations by Type
                   </Typography>
                   {examinationsByType.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart
-                        data={examinationsByType}
-                        margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="count" fill={theme.palette.primary.main} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    <Box sx={{ width: '100%', height: 300, overflowX: 'auto' }}>
+                      <ResponsiveContainer width="100%" height="100%" minWidth={350}>
+                        <BarChart
+                          data={examinationsByType}
+                          margin={{ top: 20, right: 20, left: 10, bottom: 60 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 12, fill: '#E2E8F0' }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                          />
+                          <YAxis 
+                            tick={{ fontSize: 12, fill: '#E2E8F0' }}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#1F2937', 
+                              border: '1px solid #3B82F6',
+                              color: '#E2E8F0'
+                            }}
+                            labelStyle={{ color: '#E2E8F0', fontWeight: 'bold' }}
+                          />
+                          <Legend 
+                            wrapperStyle={{ fontSize: 12, color: '#E2E8F0' }}
+                            formatter={(value) => <span style={{ color: '#E2E8F0' }}>{value}</span>}
+                          />
+                          <Bar dataKey="count" fill={theme.palette.primary.main} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </Box>
                   ) : (
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-                      <Typography variant="body1" color="textSecondary">
+                      <Typography variant="body1" sx={{ color: '#E2E8F0' }}>
                         No examination data available
                       </Typography>
                     </Box>
@@ -279,40 +308,63 @@ const Dashboard: React.FC = () => {
             
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Paper sx={{ p: { xs: 1, sm: 2 }, height: '100%', display: 'flex', flexDirection: 'column', boxShadow: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                <Paper sx={{ 
+                  p: { xs: 1, sm: 2 }, 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  boxShadow: 3, 
+                  borderRadius: 2,
+                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                }}>
+                  <Typography variant="h6" gutterBottom sx={{ 
+                    fontSize: { xs: '1rem', sm: '1.25rem' },
+                    color: '#E2E8F0',
+                    fontWeight: 'bold'
+                  }}>
                     Patient Gender Distribution
                   </Typography>
                   {patients && patients.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={[
-                            { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
-                            { name: 'Female', value: patients.filter(p => p.gender === 'F').length }
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill={theme.palette.primary.main}
-                          dataKey="value"
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        >
-                          {[
-                            { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
-                            { name: 'Female', value: patients.filter(p => p.gender === 'F').length }
-                          ].map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <Box sx={{ width: '100%', height: 300, display: 'flex', justifyContent: 'center' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
+                              { name: 'Female', value: patients.filter(p => p.gender === 'F').length }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={true}
+                            outerRadius={({ viewBox }) => Math.min(viewBox.width, viewBox.height) / 3}
+                            fill={theme.palette.primary.main}
+                            dataKey="value"
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {[
+                              { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
+                              { name: 'Female', value: patients.filter(p => p.gender === 'F').length }
+                            ].map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#1F2937', 
+                              border: '1px solid #3B82F6',
+                              color: '#E2E8F0'
+                            }}
+                            labelStyle={{ color: '#E2E8F0', fontWeight: 'bold' }}
+                          />
+                          <Legend 
+                            formatter={(value) => <span style={{ color: '#E2E8F0' }}>{value}</span>}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </Box>
                   ) : (
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
-                      <Typography variant="body1" color="textSecondary">
+                      <Typography variant="body1" sx={{ color: '#E2E8F0' }}>
                         No patient data available
                       </Typography>
                     </Box>
@@ -324,8 +376,17 @@ const Dashboard: React.FC = () => {
             {/* Recent Activity */}
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Paper sx={{ p: 2, boxShadow: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom>
+                <Paper sx={{ 
+                  p: 2, 
+                  boxShadow: 3, 
+                  borderRadius: 2,
+                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                }}>
+                  <Typography variant="h6" gutterBottom sx={{ 
+                    color: '#E2E8F0',
+                    fontWeight: 'bold',
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}>
                     Recent Examinations
                   </Typography>
                   <List>
@@ -345,23 +406,23 @@ const Dashboard: React.FC = () => {
                               my: 0.5,
                               transition: 'all 0.2s',
                               '&:hover': {
-                                backgroundColor: `${theme.palette.primary.main}15`,
+                                backgroundColor: `${theme.palette.primary.main}30`,
                                 transform: 'translateX(5px)'
                               }
                             }}
                           >
                             <ListItemText
                               primary={
-                                <Typography variant="subtitle2">
+                                <Typography variant="subtitle2" sx={{ color: '#E2E8F0', fontWeight: 'medium' }}>
                                   {exam.patient ? `${exam.patient.firstName} ${exam.patient.lastName}` : 'Unknown Patient'}
                                 </Typography>
                               }
                               secondary={
                                 <>
-                                  <Typography variant="body2" component="span" color="text.secondary">
+                                  <Typography variant="body2" component="span" sx={{ color: '#9CA3AF' }}>
                                     {getExaminationTypeDescription(exam.type as unknown as number)} - {formatDate(exam.examinationDateTime)}
                                   </Typography>
-                                  <Typography variant="body2" color="text.secondary" noWrap>
+                                  <Typography variant="body2" sx={{ color: '#9CA3AF' }} noWrap>
                                     {exam.doctor ? `Dr. ${exam.doctor.firstName} ${exam.doctor.lastName}` : 'Unknown Doctor'}
                                   </Typography>
                                 </>
@@ -371,7 +432,7 @@ const Dashboard: React.FC = () => {
                         </motion.div>
                       ))
                     ) : (
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body1" sx={{ color: '#E2E8F0', p: 2, textAlign: 'center' }}>
                         No recent examinations
                       </Typography>
                     )}
@@ -384,7 +445,8 @@ const Dashboard: React.FC = () => {
                         onClick={() => navigate('/examinations')}
                         sx={{ 
                           transition: 'all 0.3s',
-                          '&:hover': { transform: 'translateY(-2px)' }
+                          '&:hover': { transform: 'translateY(-2px)' },
+                          color: '#3B82F6'
                         }}
                       >
                         View All Examinations
@@ -397,8 +459,17 @@ const Dashboard: React.FC = () => {
             
             <Grid item xs={12} md={6}>
               <motion.div variants={itemVariants}>
-                <Paper sx={{ p: 2, boxShadow: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom>
+                <Paper sx={{ 
+                  p: 2, 
+                  boxShadow: 3, 
+                  borderRadius: 2,
+                  bgcolor: 'rgba(31, 41, 55, 0.95)'
+                }}>
+                  <Typography variant="h6" gutterBottom sx={{ 
+                    color: '#E2E8F0',
+                    fontWeight: 'bold',
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}>
                     Recent Prescriptions
                   </Typography>
                   <List>
@@ -412,41 +483,39 @@ const Dashboard: React.FC = () => {
                         >
                           <ListItemButton 
                             onClick={() => navigate(`/prescriptions/${prescription.id}`)}
-                            sx={{ 
-                              pl: 0,
+                            divider={index < recentPrescriptions.length - 1}
+                            sx={{
                               borderRadius: 1,
-                              mb: 1,
+                              my: 0.5,
+                              transition: 'all 0.2s',
                               '&:hover': {
-                                backgroundColor: `${theme.palette.primary.main}10`,
-                                transform: 'translateX(5px)',
-                                transition: 'all 0.3s'
+                                backgroundColor: `${theme.palette.primary.main}30`,
+                                transform: 'translateX(5px)'
                               }
                             }}
                           >
                             <ListItemText
-                              primary={prescription.medication}
+                              primary={
+                                <Typography variant="subtitle2" sx={{ color: '#E2E8F0', fontWeight: 'medium' }}>
+                                  {prescription.patient ? `${prescription.patient.firstName} ${prescription.patient.lastName}` : 'Unknown Patient'}
+                                </Typography>
+                              }
                               secondary={
                                 <>
-                                  <Typography component="span" variant="body2" color="textSecondary">
-                                    {formatDate(prescription.prescriptionDate)}
+                                  <Typography variant="body2" component="span" sx={{ color: '#9CA3AF' }}>
+                                    {prescription.medication} - {formatDate(prescription.prescriptionDate)}
                                   </Typography>
-                                  <br />
-                                  <Typography component="span" variant="body2" color="textSecondary">
-                                    Patient: {prescription.patient ? `${prescription.patient.firstName} ${prescription.patient.lastName}` : 'Unknown'}
-                                  </Typography>
-                                  <br />
-                                  <Typography component="span" variant="body2" color="textSecondary">
-                                    Doctor: {prescription.doctor ? `${prescription.doctor.firstName} ${prescription.doctor.lastName}` : 'Unknown'}
+                                  <Typography variant="body2" sx={{ color: '#9CA3AF' }} noWrap>
+                                    {prescription.doctor ? `Dr. ${prescription.doctor.firstName} ${prescription.doctor.lastName}` : 'Unknown Doctor'}
                                   </Typography>
                                 </>
                               }
                             />
                           </ListItemButton>
-                          {index < recentPrescriptions.length - 1 && <Divider />}
                         </motion.div>
                       ))
                     ) : (
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body1" sx={{ color: '#E2E8F0', p: 2, textAlign: 'center' }}>
                         No recent prescriptions
                       </Typography>
                     )}
@@ -459,7 +528,8 @@ const Dashboard: React.FC = () => {
                         onClick={() => navigate('/prescriptions')}
                         sx={{ 
                           transition: 'all 0.3s',
-                          '&:hover': { transform: 'translateY(-2px)' }
+                          '&:hover': { transform: 'translateY(-2px)' },
+                          color: '#3B82F6'
                         }}
                       >
                         View All Prescriptions
