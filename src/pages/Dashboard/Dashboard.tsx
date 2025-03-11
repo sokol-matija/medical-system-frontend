@@ -118,8 +118,7 @@ const Dashboard: React.FC = () => {
       // Convert to array for chart
       const examinationStats = Array.from(countByType.entries())
         .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count) // Sort by count descending
-        .slice(0, 8); // Limit to top 8 types for better visualization
+        .sort((a, b) => b.count - a.count); // Sort by count descending
       
       // Calculate patient age distribution
       if (patients.length > 0) {
@@ -611,7 +610,7 @@ const Dashboard: React.FC = () => {
               </Grid>
               
               {/* Row 2: Examinations by Type and Patient Gender Distribution */}
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={6} lg={6} height="auto">
                 <motion.div variants={itemVariants}>
                   <Paper sx={{ 
                     p: { xs: 1.5, sm: 2, md: 2.5 }, 
@@ -646,20 +645,9 @@ const Dashboard: React.FC = () => {
                         <MonitorHeartIcon sx={{ color: BAR_COLORS[0] }} />
                         Examinations by Type
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <MuiTooltip title="Shows distribution of examination types across the system">
-                          <InfoOutlinedIcon sx={{ color: '#A0AEC0', fontSize: '1.1rem' }} />
-                        </MuiTooltip>
-                        <MuiTooltip title="Refresh examination data">
-                          <IconButton 
-                            size="small" 
-                            onClick={() => fetchExaminations()} 
-                            sx={{ ml: 1, color: '#A0AEC0', '&:hover': { color: '#3B82F6' } }}
-                          >
-                            <RefreshIcon fontSize="small" />
-                          </IconButton>
-                        </MuiTooltip>
-                      </Box>
+                      <MuiTooltip title="Shows distribution of examination types across the system">
+                        <InfoOutlinedIcon sx={{ color: '#A0AEC0', fontSize: '1.1rem' }} />
+                      </MuiTooltip>
                     </Box>
                     {examinationsByType.length > 0 ? (
                       <Box sx={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflowX: 'auto' }}>
@@ -699,14 +687,12 @@ const Dashboard: React.FC = () => {
                               stroke="#718096"
                               strokeWidth={0.5}
                               tickMargin={10}
-                              interval={0}
                             />
                             <YAxis 
                               tick={{ fontSize: 11, fill: '#E2E8F0' }}
                               stroke="#718096"
                               strokeWidth={0.5}
                               tickMargin={8}
-                              allowDecimals={false}
                             />
                             <Tooltip 
                               contentStyle={{ 
