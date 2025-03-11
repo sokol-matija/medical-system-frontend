@@ -176,12 +176,12 @@ const Dashboard: React.FC = () => {
         setChartAnimation(true);
       }
       
-      // Get recent examinations (last 5)
+      // Get recent examinations (last 10 instead of 5)
       const sortedExaminations = [...examinations].sort((a, b) => 
         new Date(b.examinationDateTime).getTime() - new Date(a.examinationDateTime).getTime()
       );
       
-      // Get recent prescriptions (last 5)
+      // Get recent prescriptions (last 10 instead of 5)
       const sortedPrescriptions = [...prescriptions].sort((a, b) => 
         new Date(b.prescriptionDate).getTime() - new Date(a.prescriptionDate).getTime()
       );
@@ -196,8 +196,8 @@ const Dashboard: React.FC = () => {
       });
       
       setExaminationsByType(examinationStats);
-      setRecentExaminations(sortedExaminations.slice(0, 5));
-      setRecentPrescriptions(sortedPrescriptions.slice(0, 5));
+      setRecentExaminations(sortedExaminations.slice(0, 10)); // Show 10 items
+      setRecentPrescriptions(sortedPrescriptions.slice(0, 10)); // Show 10 items
     }
   }, [patients, doctors, examinations, medicalHistories, prescriptions]);
 
@@ -344,13 +344,13 @@ const Dashboard: React.FC = () => {
         {!isLoading && (
           <Box sx={{ height: 'calc(100vh - 220px)', overflow: 'auto', pr: { xs: 0, md: 1 } }}>
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
-              {/* Main Charts Row */}
-              <Grid item xs={12} md={6} lg={6} height="auto">
+              {/* Row 1: Patient Age Distribution (full width) */}
+              <Grid item xs={12}>
                 <motion.div variants={itemVariants}>
                   <Paper sx={{ 
                     p: { xs: 1.5, sm: 2, md: 2.5 }, 
                     height: '100%', 
-                    minHeight: { xs: 450, md: 500 },
+                    minHeight: { xs: 400, md: 450 },
                     display: 'flex',
                     flexDirection: 'column',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4)', 
@@ -392,7 +392,7 @@ const Dashboard: React.FC = () => {
                     
                     {patientAgeDistribution.length > 0 ? (
                       <>
-                        <Box sx={{ width: '100%', height: { xs: 220, sm: 240, md: 250 }, position: 'relative' }}>
+                        <Box sx={{ width: '100%', height: { xs: 220, sm: 240, md: 280 }, position: 'relative' }}>
                           <AnimatePresence>
                             {chartAnimation && (
                               <motion.div 
@@ -606,8 +606,8 @@ const Dashboard: React.FC = () => {
                 </motion.div>
               </Grid>
               
-              {/* Examinations by Type Chart - IMPROVED */}
-              <Grid item xs={12} md={6} lg={6} height="auto">
+              {/* Row 2: Examinations by Type and Patient Gender Distribution */}
+              <Grid item xs={12} md={6}>
                 <motion.div variants={itemVariants}>
                   <Paper sx={{ 
                     p: { xs: 1.5, sm: 2, md: 2.5 }, 
@@ -746,14 +746,13 @@ const Dashboard: React.FC = () => {
                   </Paper>
                 </motion.div>
               </Grid>
-
-              {/* Second Row Charts/Lists */}
-              <Grid item xs={12} md={6} lg={6}>
+              
+              <Grid item xs={12} md={6}>
                 <motion.div variants={itemVariants}>
                   <Paper sx={{ 
                     p: { xs: 1.5, sm: 2, md: 2.5 }, 
                     height: '100%',
-                    minHeight: 350,
+                    minHeight: { xs: 450, md: 500 },
                     display: 'flex',
                     flexDirection: 'column',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4)', 
@@ -911,13 +910,14 @@ const Dashboard: React.FC = () => {
                 </motion.div>
               </Grid>
               
-              {/* Recent Examinations */}
-              <Grid item xs={12} md={6} lg={6}>
+              {/* Row 3: Recent Examinations and Recent Prescriptions */}
+              <Grid item xs={12} md={6}>
                 <motion.div variants={itemVariants}>
                   <Paper sx={{ 
                     p: { xs: 1.5, sm: 2, md: 2.5 }, 
                     height: '100%',
-                    minHeight: 350,
+                    minHeight: { xs: 400, md: 450 },
+                    maxHeight: { xs: 500, md: 600 },
                     display: 'flex',
                     flexDirection: 'column',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4)', 
@@ -949,14 +949,14 @@ const Dashboard: React.FC = () => {
                       </Typography>
                     </Box>
                     
-                    <List sx={{ flex: 1, overflow: 'auto' }}>
+                    <List sx={{ flex: 1, overflow: 'auto', maxHeight: 'calc(100% - 50px)' }}>
                       {recentExaminations.length > 0 ? (
                         recentExaminations.map((exam, index) => (
                           <motion.div
                             key={exam.id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
+                            transition={{ delay: index * 0.05 }}
                           >
                             <ListItemButton 
                               onClick={() => navigate(`/examinations/${exam.id}`)}
@@ -964,6 +964,7 @@ const Dashboard: React.FC = () => {
                               sx={{
                                 borderRadius: 1,
                                 my: 0.5,
+                                py: 1,
                                 transition: 'all 0.2s',
                                 '&:hover': {
                                   backgroundColor: `${theme.palette.primary.main}30`,
@@ -1001,13 +1002,13 @@ const Dashboard: React.FC = () => {
                 </motion.div>
               </Grid>
               
-              {/* Recent Prescriptions */}
-              <Grid item xs={12} md={6} lg={6}>
+              <Grid item xs={12} md={6}>
                 <motion.div variants={itemVariants}>
                   <Paper sx={{ 
                     p: { xs: 1.5, sm: 2, md: 2.5 }, 
                     height: '100%',
-                    minHeight: 350,
+                    minHeight: { xs: 400, md: 450 },
+                    maxHeight: { xs: 500, md: 600 },
                     display: 'flex',
                     flexDirection: 'column',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4)', 
@@ -1039,14 +1040,14 @@ const Dashboard: React.FC = () => {
                       </Typography>
                     </Box>
                     
-                    <List sx={{ flex: 1, overflow: 'auto' }}>
+                    <List sx={{ flex: 1, overflow: 'auto', maxHeight: 'calc(100% - 50px)' }}>
                       {recentPrescriptions.length > 0 ? (
                         recentPrescriptions.map((prescription, index) => (
                           <motion.div
                             key={prescription.id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
+                            transition={{ delay: index * 0.05 }}
                           >
                             <ListItemButton 
                               onClick={() => navigate(`/prescriptions/${prescription.id}`)}
@@ -1054,9 +1055,10 @@ const Dashboard: React.FC = () => {
                               sx={{
                                 borderRadius: 1,
                                 my: 0.5,
+                                py: 1,
                                 transition: 'all 0.2s',
                                 '&:hover': {
-                                  backgroundColor: `${theme.palette.primary.main}30`,
+                                  backgroundColor: `${theme.palette.secondary.main}30`,
                                   transform: 'translateX(5px)'
                                 }
                               }}
