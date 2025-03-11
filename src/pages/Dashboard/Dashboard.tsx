@@ -301,7 +301,7 @@ const Dashboard: React.FC = () => {
                           {[
                             { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
                             { name: 'Female', value: patients.filter(p => p.gender === 'F').length }
-                          ].map((entry, index) => (
+                          ].map((_, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>

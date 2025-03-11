@@ -3,8 +3,11 @@ import axios from 'axios';
 // Get the API URL from environment variables
 const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:7200';
 
-// Log the API URL for debugging
-console.log('Using API URL:', API_URL);
+// Only log in development mode
+const isDev = import.meta.env.DEV;
+if (isDev) {
+  console.log('Using API URL:', API_URL);
+}
 
 // Create an axios instance with default configuration
 const api = axios.create({
@@ -17,13 +20,15 @@ const api = axios.create({
 // Add a request interceptor to attach the JWT token to each request
 api.interceptors.request.use(
   (config) => {
-    // Enhanced logging
-    console.log('API Request:', {
-      method: config.method?.toUpperCase(),
-      url: (config.baseURL || '') + (config.url || ''),
-      headers: config.headers,
-      data: config.data ? JSON.stringify(config.data) : 'No data'
-    });
+    // Enhanced logging only in development
+    if (isDev) {
+      console.log('API Request:', {
+        method: config.method?.toUpperCase(),
+        url: (config.baseURL || '') + (config.url || ''),
+        headers: config.headers,
+        data: config.data ? JSON.stringify(config.data) : 'No data'
+      });
+    }
     
     // Add a check to ensure the URL starts with /api
     if (config.url && !config.url.startsWith('/api')) {
@@ -53,13 +58,15 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Log the error for debugging
-    console.error('API Error:', error.message);
-    if (error.response) {
-      console.error('Response status:', error.response.status);
-      console.error('Response data:', error.response.data);
-    } else if (error.request) {
-      console.error('No response received. Request:', error.request);
+    // Log the error for debugging only in development
+    if (isDev) {
+      console.error('API Error:', error.message);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received. Request:', error.request);
+      }
     }
     
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {

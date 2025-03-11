@@ -52,3 +52,30 @@ export default tseslint.config({
   },
 })
 ```
+
+## Deployment to Vercel
+
+This project is configured for easy deployment to Vercel. Follow these steps to deploy:
+
+1. Push your code to a GitHub repository
+2. Log in to [Vercel](https://vercel.com) and create a new project
+3. Import your GitHub repository
+4. Configure the following environment variables:
+   - `VITE_API_URL`: The URL of your backend API (e.g., `https://your-api-domain.com`)
+5. Click "Deploy"
+
+### Environment Variables
+
+The application uses the following environment variables:
+
+- `VITE_API_URL`: The base URL for the backend API
+
+You can set these in the Vercel dashboard under Project Settings > Environment Variables.
+
+### Custom Domains
+
+To use a custom domain with your Vercel deployment:
+
+1. Go to your project settings in Vercel
+2. Navigate to the "Domains" section
+3. Add your custom domain and follow the verification steps

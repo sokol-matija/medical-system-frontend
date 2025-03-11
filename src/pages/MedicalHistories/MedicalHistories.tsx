@@ -12,11 +12,10 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
-  Chip
+  MenuItem
 } from '@mui/material';
 import PageContainer from '../../components/layout/PageContainer/PageContainer';
-import DataTable, { Column } from '../../components/common/DataTable/DataTable';
+import DataTable from '../../components/common/DataTable/DataTable';
 import { useApi } from '../../hooks/useApi';
 import { getMedicalHistories, deleteMedicalHistory } from '../../api/medicalHistoryApi';
 import { MedicalHistory } from '../../types';
@@ -70,42 +69,31 @@ const MedicalHistories: React.FC = () => {
     }
   }, [medicalHistories, searchTerm, statusFilter]);
   
-  // Column definitions for the data table
-  const columns: Column<MedicalHistory>[] = [
-    { 
-      id: 'diseaseName', 
-      label: 'Disease/Condition', 
-      minWidth: 150 
-    },
-    { 
-      id: 'patient', 
-      label: 'Patient', 
-      minWidth: 150,
-      format: (_, row) => 
-        row.patient ? `${row.patient.firstName} ${row.patient.lastName}` : 'Unknown'
-    },
-    { 
-      id: 'startDate', 
-      label: 'Start Date', 
-      minWidth: 120,
-      format: (value) => formatDate(value as string)
-    },
-    { 
-      id: 'endDate', 
-      label: 'End Date', 
-      minWidth: 120,
-      format: (value) => value ? formatDate(value as string) : 'Ongoing'
+  // Define columns for the data table with proper TypeScript types
+  const columns = [
+    {
+      id: 'patient',
+      label: 'Patient',
+      minWidth: 170,
+      format: (_: unknown, row: MedicalHistory) =>
+        `${row.patient?.firstName} ${row.patient?.lastName}`
     },
     {
-      id: 'status',
-      label: 'Status',
-      minWidth: 100,
-      format: (_, row) => 
-        row.endDate ? (
-          <Chip label="Resolved" color="success" size="small" />
-        ) : (
-          <Chip label="Active" color="warning" size="small" />
-        )
+      id: 'diseaseName',
+      label: 'Condition',
+      minWidth: 170
+    },
+    {
+      id: 'startDate',
+      label: 'Start Date',
+      minWidth: 120,
+      format: (value: unknown) => formatDate(value as string)
+    },
+    {
+      id: 'endDate',
+      label: 'End Date',
+      minWidth: 120,
+      format: (value: unknown) => value ? formatDate(value as string) : 'Ongoing'
     }
   ];
   
