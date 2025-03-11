@@ -649,7 +649,7 @@ const Dashboard: React.FC = () => {
                         <InfoOutlinedIcon sx={{ color: '#A0AEC0', fontSize: '1.1rem' }} />
                       </MuiTooltip>
                     </Box>
-                    {examinationsByType.length > 0 ? (
+                    {examinationsByType && examinationsByType.length > 0 ? (
                       <Box sx={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflowX: 'auto' }}>
                         <ResponsiveContainer width="100%" height="100%" minWidth={350}>
                           <BarChart
