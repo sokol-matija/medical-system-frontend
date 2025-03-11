@@ -395,7 +395,7 @@ const Dashboard: React.FC = () => {
                             {[
                               { name: 'Male', value: patients.filter(p => p.gender === 'M').length },
                               { name: 'Female', value: patients.filter(p => p.gender === 'F').length }
-                            ].map((entry, index) => (
+                            ].map((_entry, index) => (
                               <Cell 
                                 key={`cell-${index}`} 
                                 fill={GENDER_COLORS[index % GENDER_COLORS.length]} 
