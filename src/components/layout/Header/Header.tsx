@@ -8,7 +8,7 @@ import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import MedicationIcon from '@mui/icons-material/Medication';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Header component for the application
@@ -21,13 +21,24 @@ const Header: React.FC = () => {
   const { isAuthenticated, logout, user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [activeAnimation, setActiveAnimation] = useState<string | null>(null);
 
   /**
    * Handles logout button click
    */
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    // Set the active animation to trigger the effect
+    setActiveAnimation('logout');
+    
+    // Logout after a short delay to show the animation
+    setTimeout(() => {
+      logout();
+      navigate('/login');
+      // Reset animation state
+      setTimeout(() => {
+        setActiveAnimation(null);
+      }, 300);
+    }, 200);
   };
 
   const handleDrawerToggle = () => {
@@ -35,6 +46,62 @@ const Header: React.FC = () => {
   };
 
   const isCurrentPath = (path: string) => location.pathname === path;
+
+  // Navigation item click handler with animation
+  const handleNavClick = (path: string) => {
+    // Set the active animation to trigger the effect
+    setActiveAnimation(path);
+    
+    // Navigate to the page after a short delay to show the animation
+    setTimeout(() => {
+      navigate(path);
+      // Reset animation state
+      setTimeout(() => {
+        setActiveAnimation(null);
+      }, 300);
+    }, 200);
+  };
+
+  // Add a pulse-scale animation for elements without icons
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes pulse-rotate {
+        0% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.4) rotate(10deg);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+      }
+      
+      @keyframes pulse-scale {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 0.9;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const navButtonStyle = (path: string) => ({
     display: 'flex',
@@ -49,6 +116,10 @@ const Header: React.FC = () => {
       backgroundColor: 'rgba(59, 130, 246, 0.2)',
       transform: 'translateY(-2px)',
     },
+    '& .MuiSvgIcon-root': {
+      animation: activeAnimation === path ? 'pulse-rotate 0.5s ease-in-out' : 'none',
+      transition: 'all 0.3s ease'
+    }
   });
 
   const navigationItems = [
@@ -65,7 +136,7 @@ const Header: React.FC = () => {
         {navigationItems.map((item) => (
           <ListItemButton
             key={item.text} 
-            onClick={() => navigate(item.path)}
+            onClick={() => handleNavClick(item.path)}
             selected={isCurrentPath(item.path)}
             sx={{
               backgroundColor: isCurrentPath(item.path) ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
@@ -75,9 +146,16 @@ const Header: React.FC = () => {
               my: 0.5,
               borderRadius: 1,
               mx: 1,
+              '& .MuiSvgIcon-root': {
+                animation: activeAnimation === item.path ? 'pulse-rotate 0.5s ease-in-out' : 'none',
+                transition: 'all 0.3s ease'
+              }
             }}
           >
-            <ListItemIcon sx={{ minWidth: 40, color: isCurrentPath(item.path) ? theme.palette.primary.main : 'inherit' }}>
+            <ListItemIcon sx={{ 
+              minWidth: 40, 
+              color: isCurrentPath(item.path) ? theme.palette.primary.main : 'inherit'
+            }}>
               {item.icon}
             </ListItemIcon>
             <ListItemText primary={item.text} />
@@ -147,7 +225,7 @@ const Header: React.FC = () => {
                     <Button 
                       key={item.text}
                       color="inherit" 
-                      onClick={() => navigate(item.path)}
+                      onClick={() => handleNavClick(item.path)}
                       sx={navButtonStyle(item.path)}
                     >
                       {item.icon}
@@ -181,6 +259,10 @@ const Header: React.FC = () => {
                         backgroundColor: theme.palette.error.dark,
                         transform: 'translateY(-2px)',
                       },
+                      '& .MuiSvgIcon-root': {
+                        animation: activeAnimation === 'logout' ? 'pulse-rotate 0.5s ease-in-out' : 'none',
+                        transition: 'all 0.3s ease'
+                      }
                     }}
                   >
                     <LogoutIcon />
@@ -208,7 +290,15 @@ const Header: React.FC = () => {
         ) : (
           <Button 
             color="inherit" 
-            onClick={() => navigate('/login')}
+            onClick={() => {
+              setActiveAnimation('login');
+              setTimeout(() => {
+                navigate('/login');
+                setTimeout(() => {
+                  setActiveAnimation(null);
+                }, 300);
+              }, 200);
+            }}
             sx={{
               px: 3,
               py: 1,
@@ -218,6 +308,7 @@ const Header: React.FC = () => {
                 backgroundColor: theme.palette.primary.dark,
                 transform: 'translateY(-2px)',
               },
+              animation: activeAnimation === 'login' ? 'pulse-scale 0.5s ease-in-out' : 'none',
             }}
           >
             Login
