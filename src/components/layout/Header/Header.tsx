@@ -8,6 +8,7 @@ import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import MedicationIcon from '@mui/icons-material/Medication';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import HomeIcon from '@mui/icons-material/Home';
 import { useState, useEffect } from 'react';
 
 /**
@@ -51,6 +52,11 @@ const Header: React.FC = () => {
   const handleNavClick = (path: string) => {
     // Set the active animation to trigger the effect
     setActiveAnimation(path);
+    
+    // Close the drawer if it's open (for mobile)
+    if (mobileOpen) {
+      setMobileOpen(false);
+    }
     
     // Navigate to the page after a short delay to show the animation
     setTimeout(() => {
@@ -131,9 +137,62 @@ const Header: React.FC = () => {
   ];
 
   const drawer = (
-    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
+    <Box sx={{ width: 250 }} role="presentation">
+      {/* Dashboard link with special styling */}
+      <Box 
+        sx={{ 
+          p: 2, 
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          mb: 1
+        }}
+      >
+        <ListItemButton
+          key="Dashboard"
+          onClick={() => handleNavClick('/')}
+          selected={isCurrentPath('/')}
+          sx={{
+            backgroundColor: isCurrentPath('/') ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+            '&:hover': {
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            },
+            borderRadius: 1,
+            width: '100%',
+            py: 1.5,
+            display: 'flex',
+            justifyContent: 'center',
+            '& .MuiSvgIcon-root': {
+              animation: activeAnimation === '/' ? 'pulse-rotate 0.5s ease-in-out' : 'none',
+              transition: 'all 0.3s ease',
+              fontSize: '2rem',
+              mb: 1
+            },
+            '& .MuiListItemText-root': {
+              textAlign: 'center'
+            }
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <DashboardIcon color={isCurrentPath('/') ? 'primary' : 'inherit'} />
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                fontWeight: isCurrentPath('/') ? 'bold' : 'normal',
+                color: isCurrentPath('/') ? theme.palette.primary.main : 'inherit'
+              }}
+            >
+              Dashboard
+            </Typography>
+          </Box>
+        </ListItemButton>
+      </Box>
+      
       <List>
-        {navigationItems.map((item) => (
+        {navigationItems
+          .filter((item) => item.path !== '/')
+          .map((item) => (
           <ListItemButton
             key={item.text} 
             onClick={() => handleNavClick(item.path)}
@@ -196,11 +255,18 @@ const Header: React.FC = () => {
         <Typography 
           variant="h6" 
           component="div" 
+          onClick={() => handleNavClick('/')}
           sx={{ 
             fontWeight: 'bold',
             background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
+            cursor: 'pointer',
+            animation: activeAnimation === '/' ? 'pulse-scale 0.5s ease-in-out' : 'none',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'scale(1.05)',
+            },
           }}
         >
           Medical System
@@ -209,15 +275,30 @@ const Header: React.FC = () => {
         {isAuthenticated ? (
           <>
             {isMobile ? (
-              <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                edge="end"
-                onClick={handleDrawerToggle}
-                sx={{ ml: 2 }}
-              >
-                <MenuIcon />
-              </IconButton>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <IconButton
+                  color="inherit"
+                  aria-label="go to dashboard"
+                  onClick={() => handleNavClick('/')}
+                  sx={{ 
+                    mr: 1,
+                    '& .MuiSvgIcon-root': {
+                      animation: activeAnimation === '/' ? 'pulse-rotate 0.5s ease-in-out' : 'none',
+                      transition: 'all 0.3s ease'
+                    }
+                  }}
+                >
+                  <HomeIcon />
+                </IconButton>
+                <IconButton
+                  color="inherit"
+                  aria-label="open drawer"
+                  edge="end"
+                  onClick={handleDrawerToggle}
+                >
+                  <MenuIcon />
+                </IconButton>
+              </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Box sx={{ display: 'flex', gap: 1 }}>
