@@ -16,6 +16,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import PageContainer from '../../components/layout/PageContainer/PageContainer';
 import ExaminationForm from '../../components/examination/ExaminationForm/ExaminationForm';
+import MedicalImagesGallery from '../../components/examination/MedicalImagesGallery/MedicalImagesGallery';
 import { useApi } from '../../hooks/useApi';
 import { getExaminationDetails, updateExamination, createExamination } from '../../api/examinationApi';
 import { Examination } from '../../types';
@@ -308,44 +309,9 @@ const ExaminationDetails: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Medical Images
           </Typography>
-          {examination.medicalImages && examination.medicalImages.length > 0 ? (
-            <Grid container spacing={2}>
-              {examination.medicalImages.map((image) => (
-                <Grid item xs={12} sm={6} md={4} key={image.id}>
-                  <Card>
-                    <CardContent>
-                      <Typography variant="subtitle1">{image.fileName}</Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        Uploaded: {formatDateTime(image.uploadDateTime)}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        Type: {image.fileType}
-                      </Typography>
-                      <Button 
-                        variant="contained" 
-                        size="small" 
-                        sx={{ mt: 1 }}
-                        // View/download functionality will be implemented separately
-                      >
-                        View Image
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          ) : (
-            <Typography>No medical images available</Typography>
+          {examination.id && (
+            <MedicalImagesGallery examinationId={examination.id} />
           )}
-          
-          <Button 
-            variant="contained" 
-            color="primary" 
-            sx={{ mt: 2 }}
-            // Upload functionality will be implemented separately
-          >
-            Upload Medical Image
-          </Button>
         </TabPanel>
         
         <TabPanel value={tabValue} index={1}>

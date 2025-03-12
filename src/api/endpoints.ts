@@ -38,6 +38,7 @@ const endpoints = {
   medicalImageById: (id: number) => `/MedicalImage/${id}`,
   medicalImagesByExamination: (examinationId: number) => `/MedicalImage/Examination/${examinationId}`,
   medicalImageDownload: (id: number) => `/MedicalImage/${id}/Download`,
+  medicalImageSecureUrl: (id: number) => `/MedicalImage/${id}/SecureUrl`,
   uploadMedicalImage: (examinationId: number) => `/MedicalImage/Examination/${examinationId}/Upload`,
   
   // Prescription endpoints
