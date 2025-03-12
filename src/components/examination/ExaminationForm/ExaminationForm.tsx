@@ -136,19 +136,19 @@ const ExaminationForm: React.FC<ExaminationFormProps> = ({
   
   // Create simplified examination type options as direct numbers
   const examinationTypeOptions = [
-    { value: 1, label: 'GP (General Practitioner)' },
-    { value: 2, label: 'KRV (Blood Test)' },
-    { value: 3, label: 'XRAY (X-Ray)' },
-    { value: 4, label: 'CT (Computed Tomography)' },
-    { value: 5, label: 'MR (Magnetic Resonance)' },
-    { value: 6, label: 'ULTRA (Ultrasound)' },
-    { value: 7, label: 'EKG (Electrocardiogram)' },
-    { value: 8, label: 'ECHO (Echocardiogram)' },
-    { value: 9, label: 'EYE (Eye Examination)' },
-    { value: 10, label: 'DERM (Dermatology)' },
-    { value: 11, label: 'DENTA (Dental)' },
-    { value: 12, label: 'MAMMO (Mammography)' },
-    { value: 13, label: 'NEURO (Neurology)' }
+    { value: 0, label: 'GP (General Practitioner)' },
+    { value: 1, label: 'KRV (Blood Test)' },
+    { value: 2, label: 'XRAY (X-Ray)' },
+    { value: 3, label: 'CT (Computed Tomography)' },
+    { value: 4, label: 'MR (Magnetic Resonance)' },
+    { value: 5, label: 'ULTRA (Ultrasound)' },
+    { value: 6, label: 'EKG (Electrocardiogram)' },
+    { value: 7, label: 'ECHO (Echocardiogram)' },
+    { value: 8, label: 'EYE (Eye Examination)' },
+    { value: 9, label: 'DERM (Dermatology)' },
+    { value: 10, label: 'DENTA (Dental)' },
+    { value: 11, label: 'MAMMO (Mammography)' },
+    { value: 12, label: 'NEURO (Neurology)' }
   ];
    
   console.log('Examination type options:', examinationTypeOptions);

@@ -21,11 +21,28 @@ const examinationTypeMap: { [key: number]: string } = {
 
 // Function to get examination type name from number
 export const getExaminationTypeName = (typeNumber: number): string => {
-  return examinationTypeMap[typeNumber] || 'Unknown';
+  console.log('getExaminationTypeName called with:', typeNumber, 'type:', typeof typeNumber);
+  
+  // Handle string values being passed instead of numbers
+  if (typeof typeNumber === 'string') {
+    console.log('Converting string type to number:', typeNumber);
+    typeNumber = parseInt(typeNumber as unknown as string, 10);
+  }
+  
+  const typeName = examinationTypeMap[typeNumber] || 'Unknown';
+  console.log('Mapped to type name:', typeName);
+  return typeName;
 };
 
 // Get a human-readable description for an examination type
 export const getExaminationTypeDescription = (typeNumber: number): string => {
+  console.log('getExaminationTypeDescription called with:', typeNumber);
+  
+  // Handle string values being passed instead of numbers
+  if (typeof typeNumber === 'string') {
+    typeNumber = parseInt(typeNumber as unknown as string, 10);
+  }
+  
   const typeNames: { [key: string]: string } = {
     'GP': 'General Practitioner',
     'KRV': 'Blood Test',
@@ -43,5 +60,7 @@ export const getExaminationTypeDescription = (typeNumber: number): string => {
   };
   
   const typeName = examinationTypeMap[typeNumber];
-  return typeName ? typeNames[typeName] : 'Unknown Examination Type';
+  const description = typeName ? typeNames[typeName] : 'Unknown Examination Type';
+  console.log('Type description:', description);
+  return description;
 }; 

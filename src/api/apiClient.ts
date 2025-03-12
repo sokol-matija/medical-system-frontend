@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get the API URL from environment variables
-const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:7200';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:7200';
 
 // Only log in development mode
 const isDev = import.meta.env.DEV;
@@ -20,6 +20,15 @@ const api = axios.create({
 // Add a request interceptor to attach the JWT token to each request
 api.interceptors.request.use(
   (config) => {
+    // Check if the URL already contains /api
+    const urlHasApi = config.url?.includes('/api');
+    const baseUrlHasApi = config.baseURL?.includes('/api');
+    
+    // Only add /api prefix if the URL doesn't already contain /api and the baseURL doesn't contain /api
+    if (config.url && !urlHasApi && !baseUrlHasApi) {
+      config.url = `/api${config.url.startsWith('/') ? config.url : `/${config.url}`}`;
+    }
+    
     // Enhanced logging only in development
     if (isDev) {
       console.log('API Request:', {
@@ -28,14 +37,6 @@ api.interceptors.request.use(
         headers: config.headers,
         data: config.data ? JSON.stringify(config.data) : 'No data'
       });
-    }
-    
-    // Check if the baseURL already contains /api
-    const baseUrlHasApi = config.baseURL?.includes('/api');
-    
-    // Only add /api prefix if the URL doesn't already start with /api and the baseURL doesn't contain /api
-    if (config.url && !config.url.startsWith('/api') && !baseUrlHasApi) {
-      config.url = `/api${config.url}`;
     }
     
     const token = localStorage.getItem('token');

@@ -18,21 +18,20 @@ import {
   Tooltip as MuiTooltip
 } from '@mui/material';
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
   AreaChart,
   Area,
-  ReferenceLine
+  ReferenceLine, 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
 } from 'recharts';
+import ReactApexChart from 'react-apexcharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageContainer from '../../components/layout/PageContainer/PageContainer';
 import { useAuth } from '../../hooks/useAuth';
@@ -63,6 +62,9 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
+  // Force re-render control
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
   const [stats, setStats] = useState({
     totalPatients: 0,
     totalDoctors: 0,
@@ -97,28 +99,68 @@ const Dashboard: React.FC = () => {
     fetchPrescriptions();
   }, [fetchPatients, fetchDoctors, fetchExaminations, fetchMedicalHistories, fetchPrescriptions]);
   
+  // Refresh dashboard data
+  const handleRefresh = useCallback(() => {
+    // Reload data
+    fetchPatients();
+    fetchDoctors();
+    fetchExaminations();
+    fetchMedicalHistories();
+    fetchPrescriptions();
+    
+    // Force a component update to recalculate all charts
+    setForceUpdate(prev => prev + 1);
+  }, [fetchPatients, fetchDoctors, fetchExaminations, fetchMedicalHistories, fetchPrescriptions]);
+
   // Update stats when data is loaded
   useEffect(() => {
     if (patients && doctors && examinations && medicalHistories && prescriptions) {
+      console.log('Updating dashboard with data. Force update count:', forceUpdate);
       // Calculate statistics
       const activeConditionsCount = medicalHistories.filter(history => !history.endDate).length;
       
       // Count examinations by type
       const countByType = new Map<string, number>();
-      examinations.forEach(exam => {
-        // Convert type number to readable name
-        const typeName = getExaminationTypeDescription(exam.type as unknown as number);
-        // Skip unknown or empty types
-        if (typeName && typeName !== 'Unknown Examination Type') {
-          const count = countByType.get(typeName) || 0;
-          countByType.set(typeName, count + 1);
-        }
+      
+      // Pre-populate with all examination types to ensure we have at least 0 for each type
+      // This ensures the chart has data points even if some examination types have no instances
+      const allExaminationTypes = [
+        'General Practitioner', 'Blood Test', 'X-Ray', 'Computed Tomography',
+        'Magnetic Resonance', 'Ultrasound', 'Electrocardiogram', 'Echocardiogram',
+        'Eye Examination', 'Dermatology', 'Dental', 'Mammography', 'Neurology'
+      ];
+      
+      // Initialize all types with zero count
+      allExaminationTypes.forEach(type => {
+        countByType.set(type, 0);
       });
       
-      // Convert to array for chart
+      // Now count actual examinations
+      if (examinations && examinations.length > 0) {
+        examinations.forEach(exam => {
+          // Convert type number to readable name
+          const typeValue = exam.type as unknown as number;
+          const typeName = getExaminationTypeDescription(typeValue);
+          
+          // Log each examination type for debugging
+          console.log(`Processing examination ${exam.id}, type value: ${typeValue}, type name: ${typeName}`);
+          
+          // Skip unknown or empty types
+          if (typeName && typeName !== 'Unknown Examination Type') {
+            const count = countByType.get(typeName) || 0;
+            countByType.set(typeName, count + 1);
+            console.log(`Added to count for ${typeName}, new count: ${count + 1}`);
+          }
+        });
+      }
+      
+      // Convert to array for chart, only including types with count > 0
       const examinationStats = Array.from(countByType.entries())
+        .filter(([, count]) => count > 0)  // Only include types that have examinations
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count); // Sort by count descending
+      
+      console.log('Examination statistics for chart:', examinationStats);
       
       // Calculate patient age distribution
       if (patients.length > 0) {
@@ -202,7 +244,7 @@ const Dashboard: React.FC = () => {
       setRecentExaminations(sortedExaminations.slice(0, 10));
       setRecentPrescriptions(sortedPrescriptions.slice(0, 10));
     }
-  }, [patients, doctors, examinations, medicalHistories, prescriptions]);
+  }, [patients, doctors, examinations, medicalHistories, prescriptions, forceUpdate]);
 
   // Filter dashboard data based on age range selection
   const handleAgeRangeChange = (_event: Event, newValue: number | number[]) => {
@@ -645,99 +687,153 @@ const Dashboard: React.FC = () => {
                         <MonitorHeartIcon sx={{ color: BAR_COLORS[0] }} />
                         Examinations by Type
                       </Typography>
-                      <MuiTooltip title="Shows distribution of examination types across the system">
-                        <InfoOutlinedIcon sx={{ color: '#A0AEC0', fontSize: '1.1rem' }} />
-                      </MuiTooltip>
-                    </Box>
-                    {examinationsByType && examinationsByType.length > 0 ? (
-                      <Box sx={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflowX: 'auto' }}>
-                        <ResponsiveContainer width="100%" height="100%" minWidth={350}>
-                          <BarChart
-                            data={examinationsByType}
-                            margin={{ top: 10, right: 20, left: 0, bottom: 60 }}
-                            barGap={4}
-                            barCategoryGap="20%"
-                            style={{ fontFamily: theme.typography.fontFamily }}
+                      <Box display="flex" alignItems="center">
+                        <MuiTooltip title="Refresh data">
+                          <IconButton 
+                            size="small" 
+                            onClick={handleRefresh} 
+                            sx={{ color: '#A0AEC0', mr: 1 }}
                           >
-                            <defs>
-                              {BAR_COLORS.map((color, index) => (
-                                <linearGradient
-                                  key={`gradient-${index}`}
-                                  id={`barGradient${index}`}
-                                  x1="0"
-                                  y1="0"
-                                  x2="0"
-                                  y2="1"
-                                >
-                                  <stop offset="0%" stopColor={color} stopOpacity={0.9} />
-                                  <stop offset="100%" stopColor={color} stopOpacity={0.6} />
-                                </linearGradient>
-                              ))}
-                              <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.3" />
-                              </filter>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" vertical={false} />
-                            <XAxis 
-                              dataKey="name" 
-                              tick={{ fontSize: 11, fill: '#E2E8F0' }}
-                              angle={-45}
-                              textAnchor="end"
-                              height={60}
-                              stroke="#718096"
-                              strokeWidth={0.5}
-                              tickMargin={10}
-                            />
-                            <YAxis 
-                              tick={{ fontSize: 11, fill: '#E2E8F0' }}
-                              stroke="#718096"
-                              strokeWidth={0.5}
-                              tickMargin={8}
-                            />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: '#1F2937', 
-                                border: '1px solid #3B82F6',
-                                color: '#E2E8F0',
-                                fontWeight: 'bold',
-                                borderRadius: '4px',
-                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
-                              }}
-                              labelStyle={{ color: '#E2E8F0', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '4px', marginBottom: '4px' }}
-                              formatter={(value) => [`${value} examinations`, 'Count']}
-                              cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-                            />
-                            <Legend 
-                              wrapperStyle={{ 
-                                fontSize: 11, 
-                                color: '#E2E8F0',
-                                paddingTop: 10,
-                                paddingBottom: 5,
-                                width: '90%',
-                                marginLeft: 'auto',
-                                marginRight: 'auto'
-                              }}
-                              formatter={() => 'Examination Count'}
-                              iconType="circle"
-                            />
-                            <Bar 
-                              dataKey="count" 
-                              name="Examination Count"
-                              radius={[4, 4, 0, 0]}
-                              background={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-                              animationDuration={1500}
-                              animationEasing="ease-out"
-                            >
-                              {examinationsByType.map((_entry, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={`url(#barGradient${index % BAR_COLORS.length})`}
-                                  filter="url(#shadow)"
-                                />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
+                            <RefreshIcon fontSize="small" />
+                          </IconButton>
+                        </MuiTooltip>
+                        <MuiTooltip title="Shows distribution of examination types across the system">
+                          <InfoOutlinedIcon sx={{ color: '#A0AEC0', fontSize: '1.1rem' }} />
+                        </MuiTooltip>
+                      </Box>
+                    </Box>
+                    {/* Debug log is better kept in the effect */}
+                    {examinationsByType && examinationsByType.length > 0 ? (
+                      <Box sx={{ 
+                        width: '100%', 
+                        flex: 1, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        overflowX: 'auto',
+                        minHeight: '350px'  // Ensure minimum height
+                      }}>
+                        <ReactApexChart
+                          type="bar"
+                          height="100%"
+                          series={[
+                            {
+                              name: 'Examination Count',
+                              data: examinationsByType.map(item => item.count)
+                            }
+                          ]}
+                          options={{
+                            chart: {
+                              type: 'bar',
+                              background: 'transparent',
+                              toolbar: {
+                                show: false
+                              },
+                              animations: {
+                                enabled: true,
+                                speed: 800,
+                                animateGradually: {
+                                  enabled: true,
+                                  delay: 150
+                                },
+                                dynamicAnimation: {
+                                  enabled: true,
+                                  speed: 350
+                                }
+                              }
+                            },
+                            colors: BAR_COLORS,
+                            plotOptions: {
+                              bar: {
+                                borderRadius: 4,
+                                columnWidth: '70%',
+                                distributed: true,
+                                dataLabels: {
+                                  position: 'top'
+                                }
+                              }
+                            },
+                            dataLabels: {
+                              enabled: true,
+                              formatter: function(val) {
+                                return val.toString();
+                              },
+                              offsetY: -20,
+                              style: {
+                                fontSize: '12px',
+                                colors: ['#E2E8F0']
+                              }
+                            },
+                            xaxis: {
+                              categories: examinationsByType.map(item => item.name),
+                              labels: {
+                                style: {
+                                  colors: new Array(examinationsByType.length).fill('#E2E8F0'),
+                                  fontSize: '11px'
+                                },
+                                rotate: -45,
+                                trim: false
+                              },
+                              axisBorder: {
+                                show: false
+                              },
+                              axisTicks: {
+                                show: false
+                              }
+                            },
+                            yaxis: {
+                              labels: {
+                                style: {
+                                  colors: ['#E2E8F0'],
+                                  fontSize: '11px'
+                                }
+                              },
+                              min: 0
+                            },
+                            grid: {
+                              borderColor: 'rgba(255, 255, 255, 0.1)',
+                              strokeDashArray: 3,
+                              position: 'back',
+                              yaxis: {
+                                lines: {
+                                  show: true
+                                }
+                              },
+                              xaxis: {
+                                lines: {
+                                  show: false
+                                }
+                              }
+                            },
+                            tooltip: {
+                              enabled: true,
+                              theme: 'dark',
+                              y: {
+                                formatter: function(value) {
+                                  return `${value} examinations`;
+                                },
+                                title: {
+                                  formatter: () => 'Count'
+                                }
+                              }
+                            },
+                            legend: {
+                              show: false
+                            },
+                            fill: {
+                              type: 'gradient',
+                              gradient: {
+                                shade: 'dark',
+                                type: 'vertical',
+                                shadeIntensity: 0.5,
+                                gradientToColors: BAR_COLORS.map(color => color + '99'),
+                                inverseColors: false,
+                                opacityFrom: 1,
+                                opacityTo: 0.8,
+                                stops: [0, 100]
+                              }
+                            }
+                          }}
+                        />
                       </Box>
                     ) : (
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>

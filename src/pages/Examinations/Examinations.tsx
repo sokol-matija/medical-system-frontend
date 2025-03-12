@@ -64,6 +64,8 @@ const Examinations: React.FC = () => {
   // Filter and sort examinations when data, search term, or type filter changes
   useEffect(() => {
     if (examinations) {
+      console.log('Raw examinations data:', examinations);
+      
       // First filter by search term
       let filtered = [...examinations];
       
@@ -79,9 +81,13 @@ const Examinations: React.FC = () => {
       
       // Then filter by examination type
       if (typeFilter) {
-        filtered = filtered.filter(
-          exam => getExaminationTypeName(exam.type as unknown as number) === typeFilter
-        );
+        console.log('Filtering by type:', typeFilter);
+        filtered = filtered.filter(exam => {
+          const typeValue = exam.type as unknown as number;
+          const typeName = getExaminationTypeName(typeValue);
+          console.log(`Exam ID ${exam.id} has type value:`, typeValue, 'which maps to type name:', typeName);
+          return typeName === typeFilter;
+        });
       }
       
       // Sort by date, most recent first
@@ -89,6 +95,7 @@ const Examinations: React.FC = () => {
         new Date(b.examinationDateTime).getTime() - new Date(a.examinationDateTime).getTime()
       );
       
+      console.log('Filtered examinations:', filtered);
       setFilteredExaminations(filtered);
     }
   }, [examinations, searchTerm, typeFilter]);
@@ -138,11 +145,15 @@ const Examinations: React.FC = () => {
     
     const typesSet = new Set<string>();
     examinations.forEach(exam => {
-      const typeName = getExaminationTypeName(exam.type as unknown as number);
+      const typeValue = exam.type as unknown as number;
+      const typeName = getExaminationTypeName(typeValue);
+      console.log(`Exam ID ${exam.id} has type:`, typeValue, '→', typeName);
       typesSet.add(typeName);
     });
     
-    return Array.from(typesSet).sort();
+    const typeArray = Array.from(typesSet).sort();
+    console.log('Available examination types:', typeArray);
+    return typeArray;
   };
   
   // Handler for viewing examination details
